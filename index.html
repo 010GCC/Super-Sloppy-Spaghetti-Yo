@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Super Sloppy Spaghetti Yo</title>
+    <meta name="description" content="A saucy puzzle-platformer where Spaghetti-O characters push blocks, spin turnstiles, and wall-jump through tomato-can factories." />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@500,700,900&f[]=jetbrains-mono@500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="frame">
+        <canvas id="game" width="960" height="540" aria-label="Super Sloppy Spaghetti Yo game canvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud" aria-hidden="false">
+          <div class="hud-left">
+            <div class="hud-chip" id="hud-level">LVL 1</div>
+            <div class="hud-chip" id="hud-timer"><span class="dot"></span><span id="timer-val">0:00.00</span></div>
+            <div class="hud-chip" id="hud-deaths">DEATHS <span id="deaths-val">0</span></div>
+            <div class="hud-chip" id="hud-char">CHEF <span id="char-val">O</span></div>
+          </div>
+          <div class="hud-right">
+            <button id="btn-pause" class="hud-btn" aria-label="Pause">⏸</button>
+            <button id="btn-reset" class="hud-btn" aria-label="Reset">↻</button>
+            <button id="btn-menu" class="hud-btn" aria-label="Level Select">≡</button>
+          </div>
+        </div>
+
+        <!-- Touch controls -->
+        <div id="touch" aria-hidden="true">
+          <div class="touch-pad">
+            <button class="tbtn" data-key="ArrowLeft" aria-label="Left">◀</button>
+            <button class="tbtn" data-key="ArrowRight" aria-label="Right">▶</button>
+          </div>
+          <div class="touch-actions">
+            <button class="tbtn act-switch" data-key="KeyE" aria-label="Switch character">SWAP</button>
+            <button class="tbtn act-jump" data-key="Space" aria-label="Jump">JUMP</button>
+          </div>
+        </div>
+
+        <!-- Overlays -->
+        <div id="overlay" class="overlay">
+          <div class="ov-card" id="ov-title">
+            <div class="logo-row">
+              <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+                <defs>
+                  <radialGradient id="g1" cx="50%" cy="40%" r="60%">
+                    <stop offset="0%" stop-color="#FFD089" />
+                    <stop offset="60%" stop-color="#F5A056" />
+                    <stop offset="100%" stop-color="#C8421F" />
+                  </radialGradient>
+                </defs>
+                <circle cx="32" cy="32" r="28" fill="url(#g1)" stroke="#3A1607" stroke-width="3"/>
+                <circle cx="32" cy="32" r="11" fill="#FAEDD3" stroke="#3A1607" stroke-width="2.5"/>
+                <circle cx="26" cy="29" r="2" fill="#3A1607"/>
+                <circle cx="38" cy="29" r="2" fill="#3A1607"/>
+                <path d="M25 37 Q32 41 39 37" stroke="#3A1607" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+              </svg>
+              <h1 class="title">Super Sloppy<br/><span class="title-sub">Spaghetti Yo</span></h1>
+            </div>
+            <p class="tag">A saucy puzzle-platformer · Push blocks · Spin turnstiles · Wall-jump the gauntlet</p>
+            <div class="cta-row">
+              <button class="btn-primary" id="btn-start">START</button>
+              <button class="btn-ghost" id="btn-howto">HOW TO PLAY</button>
+            </div>
+            <p class="footnote">Original art. Generic mechanics only. Best with keyboard.</p>
+          </div>
+
+          <div class="ov-card hidden" id="ov-howto">
+            <h2>How to Play</h2>
+            <ul class="controls">
+              <li><kbd>←</kbd> <kbd>→</kbd> <span class="alt">or</span> <kbd>A</kbd> <kbd>D</kbd> — Move</li>
+              <li><kbd>Space</kbd> <kbd>W</kbd> <kbd>↑</kbd> — Jump (slide on walls then jump to wall-jump)</li>
+              <li><kbd>E</kbd> <kbd>Tab</kbd> — Switch character (when multiple)</li>
+              <li><kbd>R</kbd> — Reset level</li>
+              <li><kbd>P</kbd> <kbd>Esc</kbd> — Pause</li>
+              <li><kbd>F</kbd> — Fullscreen</li>
+            </ul>
+            <p class="hint">Push blocks into pits to bridge them. Push turnstile bars to rotate them 90°. Some levels need two chefs working together.</p>
+            <button class="btn-primary" id="btn-howto-back">GOT IT</button>
+          </div>
+
+          <div class="ov-card hidden" id="ov-levels">
+            <h2>Level Select</h2>
+            <div class="level-grid" id="level-grid"></div>
+            <button class="btn-ghost" id="btn-levels-back">BACK</button>
+          </div>
+
+          <div class="ov-card hidden" id="ov-pause">
+            <h2>Paused</h2>
+            <div class="cta-row">
+              <button class="btn-primary" id="btn-resume">RESUME</button>
+              <button class="btn-ghost" id="btn-restart">RESTART</button>
+              <button class="btn-ghost" id="btn-quit">LEVEL SELECT</button>
+            </div>
+          </div>
+
+          <div class="ov-card hidden" id="ov-win">
+            <h2 id="win-title">Level Clear</h2>
+            <p class="win-stats">
+              <span>Time <b id="win-time">0:00</b></span>
+              <span>Deaths <b id="win-deaths">0</b></span>
+            </p>
+            <div class="cta-row">
+              <button class="btn-primary" id="btn-next">NEXT</button>
+              <button class="btn-ghost" id="btn-replay">REPLAY</button>
+              <button class="btn-ghost" id="btn-win-menu">LEVEL SELECT</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="debug" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
