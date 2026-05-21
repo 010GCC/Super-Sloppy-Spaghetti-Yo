@@ -22,10 +22,12 @@ export const T = {
   PIT_FILLED: 8,  // pit filled by block (solid)
   GOAL: 9,        // goal flag (not solid)
   CHECKPOINT: 10,
+  CRUMBLE: 11,    // crumbly pasta cracker platform
+  LAUNCH: 12,     // springy sauce launcher
 };
 
 export function isSolid(t) {
-  return t === T.WALL || t === T.SLAB || t === T.PIT_FILLED;
+  return t === T.WALL || t === T.SLAB || t === T.PIT_FILLED || t === T.CRUMBLE || t === T.LAUNCH;
 }
 export function isHazard(t) {
   return t === T.SPIKE_UP || t === T.SPIKE_DOWN || t === T.SPIKE_LEFT || t === T.SPIKE_RIGHT;
@@ -37,6 +39,7 @@ export function parseLevel(level) {
   const blocks = [];
   const spawns = { o: null, t: null };
   const goals = [];
+  const crumbles = [];
   for (let r = 0; r < level.rows; r++) {
     const row = [];
     const src = level.grid[r] || '';
@@ -53,6 +56,8 @@ export function parseLevel(level) {
         case 'o': tile = T.PIT; break;
         case 'G': tile = T.GOAL; goals.push({ c, r }); break;
         case '-': tile = T.CHECKPOINT; break;
+        case 'c': tile = T.CRUMBLE; crumbles.push({ c, r }); break;
+        case 'j': tile = T.LAUNCH; break;
         case 'S': spawns.o = { c, r }; break;
         case 'T': spawns.t = { c, r }; break;
         case 'B': blocks.push({ c, r, w: 1, h: 1, kind: 'small' }); break;
@@ -74,7 +79,20 @@ export function parseLevel(level) {
     fromOrient: t.orientation,
     toOrient: t.orientation,
   }));
-  return { grid, blocks, spawns, goals, turnstiles };
+  const saws = (level.saws || []).map((s, i) => ({
+    id: i,
+    x0: (s.col + 0.5) * TILE,
+    y0: (s.row + 0.5) * TILE,
+    axis: s.axis || 'x',
+    range: (s.range || 0) * TILE,
+    speed: s.speed || 1,
+    phase: s.phase || 0,
+    x: (s.col + 0.5) * TILE,
+    y: (s.row + 0.5) * TILE,
+    r: s.radius || 13,
+    t: 0,
+  }));
+  return { grid, blocks, spawns, goals, turnstiles, saws, crumbles };
 }
 
 // Get arm cells for a turnstile.
@@ -245,6 +263,8 @@ export function createState(levelIndex) {
     grid: parsed.grid,
     blocks: parsed.blocks,
     turnstiles: parsed.turnstiles,
+    saws: parsed.saws,
+    crumbles: new Map(parsed.crumbles.map((c) => [`${c.c},${c.r}`, { c: c.c, r: c.r, touched: false, t: 0, broken: false }])),
     goals: parsed.goals,
     spawns: parsed.spawns,
     actors,
@@ -300,6 +320,7 @@ export const PHYS = {
   WALL_JUMP_LOCK: 0.12,
   COYOTE: 0.10,
   JUMP_BUFFER: 0.12,
+  LAUNCH_VEL: 840,
 };
 
 // Move actor on one axis (axis-aligned sweep against tiles + blocks + turnstiles).
@@ -374,8 +395,18 @@ function moveActor(state, actor, dx, dy, input) {
       if (col.solid) {
         if (dy > 0) {
           actor.y = col.rect.y - actor.h - 0.01;
-          actor.vy = 0;
-          actor.onGround = true;
+          if (col.tileType === T.LAUNCH) {
+            actor.vy = -PHYS.LAUNCH_VEL;
+            actor.onGround = false;
+            actor.stretch = 1.32;
+            actor.squash = 0.78;
+            state.fx.push({ kind: 'launch', x: actor.x + actor.w / 2, y: col.rect.y + 4, t: 0, life: 0.35 });
+            if (state.onSfx) state.onSfx('jump');
+          } else {
+            actor.vy = 0;
+            actor.onGround = true;
+            if (col.tileType === T.CRUMBLE && col.crumbleKey) touchCrumble(state, col.crumbleKey);
+          }
           result.collidedY = true;
           break;
         } else {
@@ -411,7 +442,11 @@ function collectColliders(state, box) {
       const t = state.grid[r][c];
       const rect = { x: c * TILE, y: r * TILE, w: TILE, h: TILE };
       if (!rectOverlap(rect, box)) continue;
-      if (isSolid(t)) out.push({ solid: true, rect, tileType: t });
+      if (t === T.CRUMBLE) {
+        const key = `${c},${r}`;
+        const crumb = state.crumbles?.get(key);
+        if (!crumb?.broken) out.push({ solid: true, rect, tileType: t, crumbleKey: key });
+      } else if (isSolid(t)) out.push({ solid: true, rect, tileType: t });
       else if (t === T.PIT) {
         // Pit is hazard only when actor's feet enter it (centered overlap)
         out.push({ solid: false, hazard: true, rect, tileType: t });
@@ -440,7 +475,46 @@ function collectColliders(state, box) {
       if (rectOverlap(ar, box)) out.push({ solid: true, rect: ar, turnstile: ts });
     }
   }
+  // Moving saw blades
+  for (const s of state.saws || []) {
+    const rect = { x: s.x - s.r + 3, y: s.y - s.r + 3, w: (s.r - 3) * 2, h: (s.r - 3) * 2 };
+    if (rectOverlap(rect, box)) out.push({ solid: false, hazard: true, rect, saw: s });
+  }
   return out;
+}
+
+function touchCrumble(state, key) {
+  const c = state.crumbles?.get(key);
+  if (!c || c.touched || c.broken) return;
+  c.touched = true;
+  c.t = 0;
+  state.fx.push({ kind: 'crumb', x: (c.c + 0.5) * TILE, y: (c.r + 0.5) * TILE, t: 0, life: 0.45 });
+}
+
+function updateCrumbles(state, dt) {
+  if (!state.crumbles) return;
+  for (const c of state.crumbles.values()) {
+    if (!c.touched && !c.broken) continue;
+    c.t += dt;
+    if (c.touched && !c.broken && c.t > 0.32) {
+      c.broken = true;
+      c.touched = false;
+      c.t = 0;
+    } else if (c.broken && c.t > 2.1) {
+      c.broken = false;
+      c.touched = false;
+      c.t = 0;
+    }
+  }
+}
+
+function updateSaws(state, dt) {
+  for (const s of state.saws || []) {
+    s.t += dt;
+    const k = Math.sin((s.t * s.speed + s.phase) * Math.PI * 2);
+    s.x = s.x0 + (s.axis === 'x' ? k * s.range : 0);
+    s.y = s.y0 + (s.axis === 'y' ? k * s.range : 0);
+  }
 }
 
 // Detect if actor is currently pressed against a wall on a given side.
@@ -550,7 +624,7 @@ function stepActor(state, actor, input, dt) {
   // Detect wall after moving
   actor.wallDir = detectWall(state, actor);
   // Detect ground (in case onGround wasn't set during this frame's Y move)
-  if (!actor.onGround) actor.onGround = detectGround(state, actor);
+  if (!actor.onGround && actor.vy >= 0) actor.onGround = detectGround(state, actor);
 
   // Coyote
   if (actor.onGround) actor.coyote = PHYS.COYOTE;
@@ -602,6 +676,8 @@ export function update(state, input, dt) {
   if (state.paused || state.won) return;
   state.time += dt;
   state.pushCooldown = Math.max(0, state.pushCooldown - dt);
+  updateSaws(state, dt);
+  updateCrumbles(state, dt);
 
   // Active actor receives input; others are idle
   for (let i = 0; i < state.actors.length; i++) {

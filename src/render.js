@@ -151,6 +151,53 @@ function drawPitFilled(ctx, x, y) {
   ctx.fillRect(x + 4, y + 2, TILE - 8, 4);
 }
 
+function drawCrumbleTile(ctx, x, y, crumb) {
+  const shake = crumb?.touched ? Math.sin(crumb.t * 80) * 1.5 : 0;
+  ctx.save();
+  ctx.translate(shake, 0);
+  const g = ctx.createLinearGradient(x, y, x, y + TILE);
+  g.addColorStop(0, '#f3d89a');
+  g.addColorStop(1, '#b8793d');
+  ctx.fillStyle = g;
+  ctx.fillRect(x + 1, y + 3, TILE - 2, TILE - 5);
+  ctx.strokeStyle = '#5e2f16';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x + 1.5, y + 3.5, TILE - 3, TILE - 6);
+  ctx.strokeStyle = 'rgba(74, 35, 14, 0.55)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 7, y + 8);
+  ctx.lineTo(x + 14, y + 15);
+  ctx.lineTo(x + 10, y + 24);
+  ctx.moveTo(x + 21, y + 7);
+  ctx.lineTo(x + 18, y + 18);
+  ctx.lineTo(x + 25, y + 25);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255, 240, 190, 0.5)';
+  ctx.fillRect(x + 4, y + 5, TILE - 8, 2);
+  ctx.restore();
+}
+
+function drawLaunchTile(ctx, x, y, t) {
+  drawSlabTile(ctx, x, y, true);
+  const pulse = (Math.sin(t * 8) + 1) * 0.5;
+  ctx.fillStyle = '#2b1309';
+  roundRect(ctx, x + 4, y + 9, TILE - 8, TILE - 12, 4);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b2a';
+  ctx.fillRect(x + 7, y + 12 + pulse * 2, TILE - 14, 5);
+  ctx.fillStyle = '#ffd089';
+  ctx.fillRect(x + 10, y + 7, TILE - 20, 5);
+  ctx.strokeStyle = '#4a210f';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x + 8, y + 21);
+  ctx.lineTo(x + 13, y + 15);
+  ctx.lineTo(x + 18, y + 21);
+  ctx.lineTo(x + 23, y + 15);
+  ctx.stroke();
+}
+
 function drawGoal(ctx, x, y, t) {
   // Meatball with shine, bouncing slightly
   const bob = Math.sin(t * 3) * 2;
@@ -276,6 +323,53 @@ function drawTurnstile(ctx, ts, t) {
   ctx.beginPath();
   ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawSaw(ctx, saw, t) {
+  const teeth = 14;
+  const spin = t * 8 + saw.id;
+  ctx.save();
+  ctx.translate(saw.x, saw.y);
+  ctx.rotate(spin);
+  ctx.fillStyle = '#e8d6ad';
+  ctx.strokeStyle = '#3a1607';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i < teeth * 2; i++) {
+    const a = (i / (teeth * 2)) * Math.PI * 2;
+    const r = i % 2 === 0 ? saw.r + 4 : saw.r - 2;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#c8421f';
+  ctx.beginPath();
+  ctx.arc(0, 0, saw.r * 0.42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#3a1607';
+  ctx.stroke();
+  ctx.restore();
+
+  if (saw.range > 0) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(246, 231, 193, 0.18)';
+    ctx.setLineDash([4, 6]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (saw.axis === 'x') {
+      ctx.moveTo(saw.x0 - saw.range, saw.y0);
+      ctx.lineTo(saw.x0 + saw.range, saw.y0);
+    } else {
+      ctx.moveTo(saw.x0, saw.y0 - saw.range);
+      ctx.lineTo(saw.x0, saw.y0 + saw.range);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -454,6 +548,21 @@ function drawFX(ctx, fx, t) {
         ctx.arc(f.x + Math.cos(a) * dr, f.y + Math.sin(a) * dr * 0.5, 3 * (1 - k), 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (f.kind === 'launch') {
+      const k = f.t / (f.life || 0.35);
+      const alpha = 1 - k;
+      ctx.strokeStyle = `rgba(255, 107, 42, ${alpha})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, 8 + k * 20, Math.PI, Math.PI * 2);
+      ctx.stroke();
+    } else if (f.kind === 'crumb') {
+      const k = f.t / (f.life || 0.45);
+      ctx.fillStyle = `rgba(243, 216, 154, ${1 - k})`;
+      for (let i = 0; i < 6; i++) {
+        const a = i * 1.1;
+        ctx.fillRect(f.x + Math.cos(a) * k * 24, f.y + Math.sin(a) * k * 12, 3, 3);
+      }
     }
   }
 }
@@ -484,6 +593,12 @@ export function render(ctx, state, t) {
         case T.SPIKE_RIGHT: drawSpikeRight(ctx, x, y); break;
         case T.PIT: drawPit(ctx, x, y); break;
         case T.PIT_FILLED: drawPitFilled(ctx, x, y); break;
+        case T.CRUMBLE: {
+          const crumb = state.crumbles?.get(`${c},${r}`);
+          if (!crumb?.broken) drawCrumbleTile(ctx, x, y, crumb);
+          break;
+        }
+        case T.LAUNCH: drawLaunchTile(ctx, x, y, t); break;
         case T.GOAL: drawGoal(ctx, x, y, t); break;
         default: break;
       }
@@ -498,6 +613,9 @@ export function render(ctx, state, t) {
 
   // Turnstiles
   for (const ts of state.turnstiles) drawTurnstile(ctx, ts, t);
+
+  // Moving saw blades
+  for (const saw of state.saws || []) drawSaw(ctx, saw, t);
 
   // Actors
   for (let i = 0; i < state.actors.length; i++) {

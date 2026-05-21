@@ -1,6 +1,6 @@
 # Super Sloppy Spaghetti Yo
 
-A browser-based precision platformer starring a sentient Spaghetti-O in a saucy tomato-can factory. This v2 direction drops the Kwirk-style puzzle focus and leans into speed, wall-slides, wall-jumps, spike reads, instant respawns, and short levels built for clean reruns.
+A browser-based precision platformer starring a sentient Spaghetti-O in a saucy tomato-can factory. The current v3 direction drops the Kwirk-style puzzle focus and leans into speed, wall-slides, wall-jumps, moving saws, launch pads, crumble platforms, spike reads, instant respawns, and short levels built for clean reruns.
 
 All art, sound, code, level design and brand identity are original to this project.
 
@@ -39,9 +39,9 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 | `index.html` | Title screen, HUD, pause/reset/menu buttons, mobile touch controls, overlay panels |
 | `style.css` | Pasta-noir design tokens, responsive layout, touch control styling |
 | `favicon.svg` | Custom Spaghetti-O ring mark |
-| `src/levels.js` | 5 hand-authored precision-platforming levels in ASCII tile grids |
-| `src/game.js` | Core engine — tile collision, AABB sub-stepping, actor physics, hazards, wall-slide, wall-jump, coyote time, jump buffering |
-| `src/render.js` | Procedural canvas rendering of tiles, spikes, goal, actors, and dormant puzzle-object visuals |
+| `src/levels.js` | 5 hand-authored precision-platforming levels in ASCII tile grids plus declared saw paths |
+| `src/game.js` | Core engine — tile collision, moving saws, crumble platforms, launch pads, AABB sub-stepping, wall-slide, wall-jump, coyote time, jump buffering |
+| `src/render.js` | Procedural canvas rendering of tiles, spikes, saws, launch pads, crumble platforms, goal, actors, and dormant puzzle-object visuals |
 | `src/audio.js` | Procedural Web Audio sound effects |
 | `src/main.js` | Phase machine, input handling, fixed-timestep loop, HUD wiring, Playwright test hooks |
 
@@ -55,12 +55,18 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - Collision uses sub-stepped AABB to prevent tunneling at high speed.
 - Instant respawn on spike contact, death counter increments, timer keeps running.
 
+**Hazards & platforming toys**
+- Moving saw blades travel on horizontal or vertical rails and instantly respawn the player on contact.
+- Crumble platforms shake, break after a short delay, and respawn so the player has to keep moving.
+- Launch pads bounce the player upward for fast routes and vertical exits.
+- Static spikes and pits still provide readable one-touch hazards.
+
 **5 platforming-first levels**
-1. **Slop Sprint** — clean warm-up with gaps and spike rows.
-2. **Sauce-Slick Chimney** — dedicated wall-jump practice.
-3. **Needle Linguine** — horizontal spike rhythm and commitment jumps.
-4. **Can-Factory Hopline** — small platform chain over bad floors.
-5. **The Slop Corridor** — mixed final gauntlet with jump cuts, ceiling spikes, and flow.
+1. **Launch Lunch** — introduces sauce launch pads.
+2. **Buzzsaw Bucatini** — introduces moving saw timing.
+3. **Cracker Collapse** — introduces crumble platforms.
+4. **Wall Sauce Deluxe** — wall-jump shaft with moving saw pressure.
+5. **The Final Slopline** — mixed final gauntlet with pads, crumble, saws, spikes, and flow.
 
 **UI**
 - Animated title screen with logo, How To Play, and Level Select.
@@ -83,7 +89,7 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - **Pure vanilla HTML/CSS/JS modules**: no framework or bundler, easy static deployment.
 - **Procedural art and audio**: zero external sprite or sample files, fully original visual/audio identity.
 - **Short reset-loop levels**: every level is meant to be readable, retryable, and speedrunnable rather than a logic puzzle.
-- **Puzzle systems kept dormant**: push blocks, pits, turnstiles, and multi-character switching are still in the engine, but v2 levels do not require them. This preserves optional future remix potential without compromising the current gameplay direction.
+- **Puzzle systems kept dormant**: push blocks, pit-filling, turnstiles, and multi-character switching are still in the engine, but current levels do not require them. This preserves optional future remix potential without compromising the platforming direction.
 - **Pasta-noir aesthetic**: tomato-can industrial walls, cream slab platforms, sauce-bone spikes, meatball goal, and a Spaghetti-O ring character.
 
 ## Known limitations
@@ -91,4 +97,4 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - **No persistent saves.** Best times and progress reset on page reload because the sandboxed iframe blocks browser storage.
 - **Fonts require network.** Fontshare fonts load from the CDN; offline users fall back to system sans-serif.
 - **Physical mobile device QA not performed.** Touch controls are implemented but should be tested on real phones before calling the mobile version final.
-- **No moving hazards yet.** The current platforming uses static spikes, pits, and geometry; saws, crumbling platforms, moving blades, and ghost replays would be natural v3 additions.
+- **No ghost replays yet.** Saws, launch pads, and crumble platforms are implemented; ghost racing and online leaderboards would be natural future additions.

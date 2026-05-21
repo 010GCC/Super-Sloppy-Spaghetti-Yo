@@ -352,6 +352,8 @@ window.render_game_to_text = () => {
     }));
     payload.blocks = app.state.blocks.map(b => ({ c: b.c, r: b.r, w: b.w, h: b.h, consumed: !!b.consumed }));
     payload.turnstiles = app.state.turnstiles.map(t => ({ cx: t.cx, cy: t.cy, orient: t.orientation, rotating: t.rotating }));
+    payload.saws = (app.state.saws || []).map(s => ({ x: Math.round(s.x), y: Math.round(s.y), axis: s.axis, range: s.range }));
+    payload.crumbles = [...(app.state.crumbles || new Map()).values()].map(c => ({ c: c.c, r: c.r, touched: c.touched, broken: c.broken }));
     payload.won = app.state.won;
     payload.paused = app.state.paused;
   }
