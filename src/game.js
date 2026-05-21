@@ -1,5 +1,5 @@
 // Super Sloppy Spaghetti Yo — core game module
-// Vanilla canvas 2D. Tile-based physics + puzzle entities.
+// Vanilla canvas 2D. Tile-based physics tuned for precision platforming.
 
 import { LEVELS } from './levels.js';
 
@@ -284,19 +284,19 @@ function makeActor(kind, c, r, id) {
   };
 }
 
-// Tunables (slick pasta physics — slightly slippery)
+// Tunables (snappy pasta physics — fast starts, readable air control, instant retries)
 export const PHYS = {
   GRAVITY: 1900,
   MAX_FALL: 980,
-  RUN_ACCEL: 2400,
-  RUN_MAX: 230,
-  GROUND_FRICTION: 12, // multiplier
-  AIR_FRICTION: 3,
+  RUN_ACCEL: 3200,
+  RUN_MAX: 265,
+  GROUND_FRICTION: 18, // multiplier
+  AIR_FRICTION: 4,
   JUMP_VEL: 620,
   JUMP_CUT: 0.45,
   WALL_SLIDE_VEL: 160,
-  WALL_JUMP_VX: 290,
-  WALL_JUMP_VY: 600,
+  WALL_JUMP_VX: 330,
+  WALL_JUMP_VY: 620,
   WALL_JUMP_LOCK: 0.12,
   COYOTE: 0.10,
   JUMP_BUFFER: 0.12,

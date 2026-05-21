@@ -150,7 +150,7 @@ canvas#game {
 }
 .tbtn:active { transform: scale(0.92); background: rgba(200, 66, 31, 0.5); }
 .tbtn.act-jump { background: rgba(200, 66, 31, 0.85); border-color: #ff8a3c; }
-.tbtn.act-switch { background: rgba(109, 163, 77, 0.7); border-color: #9ec97c; font-size: 14px; }
+.tbtn.act-switch { display: none; }
 
 @media (hover: none) and (pointer: coarse) {
   #touch { display: flex; }
@@ -296,8 +296,14 @@ kbd {
 }
 
 @media (max-width: 720px) {
-  #frame { aspect-ratio: auto; height: 100dvh; max-width: 100%; border-radius: 0; }
-  #app { padding: 0; }
+  #frame {
+    aspect-ratio: 16 / 9;
+    width: 100vw;
+    height: auto;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  #app { padding: 0; align-content: center; }
   .ov-card { padding: 22px 18px; }
   .title { font-size: 28px; }
   .logo-mark { width: 54px; height: 54px; }
