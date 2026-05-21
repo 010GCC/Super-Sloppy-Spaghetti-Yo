@@ -390,6 +390,11 @@ function drawActor(ctx, a, isActive, t) {
   const cy = a.y + a.h / 2;
   ctx.save();
   ctx.translate(cx, cy);
+  if (a.ghost) {
+    ctx.globalAlpha = 0.42;
+    ctx.shadowColor = '#7ee3ff';
+    ctx.shadowBlur = 12;
+  }
 
   // Squash/stretch
   ctx.scale(a.squash, a.stretch);
@@ -471,7 +476,7 @@ function drawActor(ctx, a, isActive, t) {
   ctx.restore();
 
   // Active indicator
-  if (isActive) {
+  if (isActive && !a.ghost) {
     ctx.save();
     ctx.translate(cx, a.y - 10);
     const bob = Math.sin(t * 6) * 2;
@@ -616,6 +621,9 @@ export function render(ctx, state, t) {
 
   // Moving saw blades
   for (const saw of state.saws || []) drawSaw(ctx, saw, t);
+
+  // Best-run ghost appears behind the live actor after a level has a saved run.
+  if (state.ghost) drawActor(ctx, state.ghost, false, t);
 
   // Actors
   for (let i = 0; i < state.actors.length; i++) {

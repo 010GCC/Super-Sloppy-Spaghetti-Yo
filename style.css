@@ -106,6 +106,11 @@ canvas#game {
   font-variant-numeric: tabular-nums lining-nums;
 }
 .hud-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sauce-hot); box-shadow: 0 0 8px var(--sauce-hot); }
+.medal-chip { border-color: rgba(245, 160, 86, 0.45); }
+.medal-chip.medal-gold { color: #ffe39a; border-color: #f0d066; box-shadow: 0 0 16px rgba(240, 208, 102, 0.18); }
+.medal-chip.medal-silver { color: #dfe8ee; border-color: #9fb4c0; }
+.medal-chip.medal-bronze { color: #f2b56e; border-color: #b8793d; }
+.medal-chip.medal-clear { color: var(--text-muted); border-color: var(--border); }
 
 .hud-btn {
   width: 34px; height: 34px;
@@ -182,12 +187,13 @@ canvas#game {
 }
 .ov-card.hidden { display: none; }
 .ov-card h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 14px;
   color: var(--cream);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  word-spacing: 0.08em;
 }
 
 .logo-row { display: flex; align-items: center; gap: 18px; justify-content: center; margin-bottom: 10px; }
@@ -282,7 +288,10 @@ kbd {
 .level-card .lc-num { font-size: 11px; color: var(--paprika); letter-spacing: 0.1em; font-family: var(--font-mono); }
 .level-card .lc-name { font-size: 15px; font-weight: 700; margin-top: 4px; }
 .level-card .lc-desc { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 6px; font-family: var(--font-body); letter-spacing: 0; line-height: 1.4; }
+.level-card .lc-target { font-size: 10px; color: #d5b16d; margin-top: 7px; font-family: var(--font-mono); line-height: 1.35; }
 .level-card .lc-best { font-size: 10px; color: var(--basil); margin-top: 6px; font-family: var(--font-mono); }
+.level-card .lc-best.muted { color: #6e5a3f; }
+.summary-line { margin: -4px 0 14px; color: var(--text-muted); font: 500 12px/1.4 var(--font-mono); }
 
 .win-stats {
   display: flex; gap: 28px; justify-content: center; margin: 6px 0 18px;
@@ -290,6 +299,12 @@ kbd {
   font-size: 13px;
 }
 .win-stats b { color: var(--cream); font-family: var(--font-mono); margin-left: 6px; }
+.win-medal { margin: -4px 0 6px; font: 900 18px/1.2 var(--font-body); letter-spacing: 0.02em; }
+.win-medal.medal-gold { color: #ffe39a; text-shadow: 0 0 18px rgba(240, 208, 102, 0.35); }
+.win-medal.medal-silver { color: #dfe8ee; }
+.win-medal.medal-bronze { color: #f2b56e; }
+.win-medal.medal-clear { color: var(--cream); }
+.win-detail { margin: 0 0 18px; color: var(--text-muted); font: 500 12px/1.45 var(--font-mono); }
 
 #debug {
   display: none;
@@ -308,5 +323,32 @@ kbd {
   .title { font-size: 28px; }
   .logo-mark { width: 54px; height: 54px; }
   .hud-chip { font-size: 10px; padding: 4px 8px; }
+  .medal-chip { display: none; }
   .hud-btn { width: 30px; height: 30px; }
+}
+
+@media (max-width: 720px) and (orientation: landscape) {
+  #frame {
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100vw * 9 / 16));
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 720px) and (orientation: portrait) {
+  body.auto-rotate #app {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body.auto-rotate #frame {
+    width: min(100dvh, calc(100vw * 16 / 9));
+    height: auto;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+    transform: rotate(90deg);
+    transform-origin: center center;
+    border-radius: 0;
+  }
 }

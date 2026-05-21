@@ -44,6 +44,7 @@ export const LEVELS = [
     chars: ['o'],
     turnstiles: [],
     saws: [],
+    medals: { gold: 7.5, silver: 10.5, bronze: 14.0 },
   },
 
   {
@@ -78,6 +79,7 @@ export const LEVELS = [
       { col: 10, row: 13, axis: 'x', range: 3.2, speed: 0.38, phase: 0.1 },
       { col: 21, row: 12, axis: 'y', range: 2.2, speed: 0.45, phase: 0.35 },
     ],
+    medals: { gold: 9.0, silver: 12.5, bronze: 17.0 },
   },
 
   {
@@ -111,6 +113,7 @@ export const LEVELS = [
     saws: [
       { col: 17, row: 13, axis: 'x', range: 2.4, speed: 0.5, phase: 0.25 },
     ],
+    medals: { gold: 8.8, silver: 12.0, bronze: 16.5 },
   },
 
   {
@@ -145,6 +148,7 @@ export const LEVELS = [
       { col: 14, row: 10, axis: 'y', range: 4.0, speed: 0.32, phase: 0.0 },
       { col: 16, row: 7, axis: 'y', range: 3.0, speed: 0.42, phase: 0.5 },
     ],
+    medals: { gold: 10.5, silver: 14.0, bronze: 19.0 },
   },
 
   {
@@ -180,6 +184,7 @@ export const LEVELS = [
       { col: 18, row: 10, axis: 'y', range: 2.8, speed: 0.52, phase: 0.65 },
       { col: 24, row: 8, axis: 'x', range: 2.5, speed: 0.58, phase: 0.35 },
     ],
+    medals: { gold: 13.5, silver: 18.0, bronze: 24.0 },
   },
 ];
 

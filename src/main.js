@@ -27,6 +27,8 @@ const app = {
   levelIndex: 0,
   bestTimes: {},      // levelId -> seconds
   bestDeaths: {},     // levelId -> deaths
+  bestMedals: {},     // levelId -> medal name
+  bestRuns: {},       // levelId -> ghost trail
   cleared: {},        // levelId -> bool
   lastT: performance.now(),
   acc: 0,
@@ -85,12 +87,17 @@ const hud = document.getElementById('hud');
 const hudLevel = document.getElementById('hud-level');
 const hudTimer = document.getElementById('timer-val');
 const hudDeaths = document.getElementById('deaths-val');
+const hudMedal = document.getElementById('hud-medal');
+const medalTarget = document.getElementById('medal-target');
 const hudChar = document.getElementById('hud-char');
 const charVal = document.getElementById('char-val');
 const winTitle = document.getElementById('win-title');
 const winTime = document.getElementById('win-time');
 const winDeaths = document.getElementById('win-deaths');
+const winMedal = document.getElementById('win-medal');
+const winDetail = document.getElementById('win-detail');
 const levelGrid = document.getElementById('level-grid');
+const runSummary = document.getElementById('run-summary');
 const debugEl = document.getElementById('debug');
 
 function setOverlay(panel) {
@@ -119,16 +126,19 @@ function setPhase(p) {
 
 function renderLevelGrid() {
   levelGrid.innerHTML = '';
+  runSummary.textContent = sessionSummaryText();
   LEVELS.forEach((lv, i) => {
     const card = document.createElement('button');
     card.className = 'level-card';
     const best = app.bestTimes[lv.id];
     const cleared = app.cleared[lv.id];
+    const medal = app.bestMedals[lv.id];
     card.innerHTML = `
-      <div class="lc-num">${cleared ? '★ ' : ''}LEVEL ${String(i + 1).padStart(2, '0')}</div>
+      <div class="lc-num">${medal ? medalIcon(medal) + ' ' : cleared ? '★ ' : ''}LEVEL ${String(i + 1).padStart(2, '0')}</div>
       <div class="lc-name">${lv.name}</div>
       <div class="lc-desc">${lv.desc}</div>
-      ${best != null ? `<div class="lc-best">Best ${formatTime(best)}</div>` : ''}
+      <div class="lc-target">Gold ${formatTime(lv.medals.gold)} · Silver ${formatTime(lv.medals.silver)}</div>
+      ${best != null ? `<div class="lc-best">Best ${formatTime(best)} · ${medalLabel(medal)}</div>` : '<div class="lc-best muted">No ghost yet</div>'}
     `;
     card.addEventListener('click', () => {
       playSfx('select');
@@ -144,10 +154,43 @@ function formatTime(s) {
   return `${m}:${sec}`;
 }
 
+function medalForTime(level, seconds) {
+  const m = level.medals || { gold: Infinity, silver: Infinity, bronze: Infinity };
+  if (seconds <= m.gold) return 'gold';
+  if (seconds <= m.silver) return 'silver';
+  if (seconds <= m.bronze) return 'bronze';
+  return 'clear';
+}
+
+function medalIcon(medal) {
+  return ({ gold: '★', silver: '◆', bronze: '●', clear: '✓' })[medal] || '✓';
+}
+
+function medalLabel(medal) {
+  return ({ gold: 'Gold', silver: 'Silver', bronze: 'Bronze', clear: 'Clear' })[medal] || 'Clear';
+}
+
+function sessionTotal() {
+  return LEVELS.reduce((sum, lv) => sum + (app.bestTimes[lv.id] ?? 0), 0);
+}
+
+function sessionSummaryText() {
+  const cleared = LEVELS.filter((lv) => app.cleared[lv.id]).length;
+  const total = sessionTotal();
+  if (cleared === 0) return 'No clears yet. Set a time to spawn a ghost.';
+  if (cleared < LEVELS.length) return `${cleared}/${LEVELS.length} levels cleared · Current best total ${formatTime(total)}`;
+  const golds = LEVELS.filter((lv) => app.bestMedals[lv.id] === 'gold').length;
+  return `Full clear ${formatTime(total)} · ${golds}/${LEVELS.length} gold medals`;
+}
+
 function startLevel(i) {
   app.levelIndex = i;
   app.state = createState(i);
   app.state.onSfx = playSfx;
+  app.state.runTrail = [];
+  app.state.trailClock = 0;
+  app.state.ghostTrail = app.bestRuns[app.state.level.id] || null;
+  app.state.ghost = null;
   setPhase(PHASE.PLAYING);
 }
 
@@ -189,6 +232,21 @@ document.getElementById('btn-menu').addEventListener('click', () => { playSfx('c
 window.addEventListener('pointerdown', unlockAudio, { once: true });
 window.addEventListener('keydown', unlockAudio, { once: true });
 
+// ─── Orientation / auto-rotate fit ───────────────────────────────────────
+// The preview iframe blocks orientation-lock/fullscreen APIs, so we do this
+// with responsive classes: landscape fills normally, portrait phones get a
+// rotated 16:9 frame that preserves the game canvas instead of stretching it.
+function updateOrientationClass() {
+  const portrait = window.innerHeight > window.innerWidth;
+  const coarse = matchMedia('(hover: none) and (pointer: coarse)').matches;
+  document.body.classList.toggle('orientation-portrait', portrait);
+  document.body.classList.toggle('orientation-landscape', !portrait);
+  document.body.classList.toggle('auto-rotate', portrait && coarse);
+}
+window.addEventListener('resize', updateOrientationClass);
+window.addEventListener('orientationchange', updateOrientationClass);
+updateOrientationClass();
+
 // ─── Main loop ───────────────────────────────────────────────────────────
 const TICK = 1 / 60;
 let acc = 0;
@@ -209,6 +267,7 @@ function frame(now) {
     if (app.phase === PHASE.PLAYING && app.state) {
       const input = readInput();
       update(app.state, input, TICK);
+      updateSpeedrunState(app.state, TICK);
       // Check for level win
       if (app.state.won && app.phase === PHASE.PLAYING) {
         onLevelWon();
@@ -268,10 +327,57 @@ function updateHud() {
   hudLevel.textContent = `LVL ${app.state.level.id}`;
   hudTimer.textContent = formatTime(app.state.time);
   hudDeaths.textContent = String(app.state.deaths);
+  const medal = medalForTime(app.state.level, app.state.time);
+  const targetName = medal === 'gold' ? 'GOLD' : medal === 'silver' ? 'SILVER' : medal === 'bronze' ? 'BRONZE' : 'CLEAR';
+  const targetTime = medal === 'clear' ? null : app.state.level.medals[medal];
+  hudMedal.className = `hud-chip medal-chip medal-${medal}`;
+  hudMedal.firstChild.nodeValue = `${targetName} `;
+  medalTarget.textContent = targetTime ? formatTime(targetTime) : 'FINISH';
   if (app.state.actors.length > 1) {
     const active = app.state.actors[app.state.activeActor];
     charVal.textContent = active.kind.toUpperCase();
   }
+}
+
+function updateSpeedrunState(state, dt) {
+  if (!state || state.won || !state.actors.length) return;
+  const a = state.actors[state.activeActor];
+  state.trailClock = (state.trailClock || 0) + dt;
+  if (!state.runTrail) state.runTrail = [];
+  if (state.trailClock >= 0.08) {
+    state.trailClock = 0;
+    state.runTrail.push({ t: state.time, x: a.x, y: a.y, facing: a.facing || 1 });
+    if (state.runTrail.length > 1800) state.runTrail.shift();
+  }
+  state.ghost = state.ghostTrail?.length ? sampleGhost(state.ghostTrail, state.time) : null;
+}
+
+function sampleGhost(trail, time) {
+  if (!trail?.length) return null;
+  let prev = trail[0];
+  for (let i = 1; i < trail.length; i++) {
+    const next = trail[i];
+    if (next.t >= time) {
+      const span = Math.max(0.001, next.t - prev.t);
+      const k = Math.max(0, Math.min(1, (time - prev.t) / span));
+      return {
+        kind: 'o',
+        x: prev.x + (next.x - prev.x) * k,
+        y: prev.y + (next.y - prev.y) * k,
+        w: 26,
+        h: 28,
+        vx: 0,
+        vy: 0,
+        facing: next.facing || 1,
+        squash: 1,
+        stretch: 1,
+        animT: time,
+        ghost: true,
+      };
+    }
+    prev = next;
+  }
+  return { kind: 'o', x: prev.x, y: prev.y, w: 26, h: 28, vx: 0, vy: 0, facing: prev.facing || 1, squash: 1, stretch: 1, animT: time, ghost: true };
 }
 
 function onLevelWon() {
@@ -279,12 +385,23 @@ function onLevelWon() {
   const id = app.state.level.id;
   const t = app.state.time;
   const d = app.state.deaths;
-  if (app.bestTimes[id] == null || t < app.bestTimes[id]) app.bestTimes[id] = t;
+  const medal = medalForTime(app.state.level, t);
+  const wasBest = app.bestTimes[id] == null || t < app.bestTimes[id];
+  if (wasBest) {
+    app.bestTimes[id] = t;
+    app.bestRuns[id] = (app.state.runTrail || []).slice();
+  }
   if (app.bestDeaths[id] == null || d < app.bestDeaths[id]) app.bestDeaths[id] = d;
+  const rank = { clear: 0, bronze: 1, silver: 2, gold: 3 };
+  if (!app.bestMedals[id] || rank[medal] > rank[app.bestMedals[id]]) app.bestMedals[id] = medal;
   app.cleared[id] = true;
-  winTitle.textContent = `Level ${id} Clear`;
+  const allCleared = LEVELS.every((lv) => app.cleared[lv.id]);
+  winTitle.textContent = allCleared ? 'Full Run Complete' : `Level ${id} Complete`;
   winTime.textContent = formatTime(t);
   winDeaths.textContent = String(d);
+  winMedal.className = `win-medal medal-${medal}`;
+  winMedal.textContent = `${medalIcon(medal)} ${medalLabel(medal)} medal`;
+  winDetail.textContent = `${wasBest ? 'New best ghost saved.' : `Best ghost ${formatTime(app.bestTimes[id])}.`} ${allCleared ? `Full-clear total ${formatTime(sessionTotal())}.` : sessionSummaryText()}`;
   setPhase(PHASE.WIN);
 }
 
@@ -338,7 +455,15 @@ function renderIdle() {
 
 // ─── Test/Automation hooks ──────────────────────────────────────────────
 window.render_game_to_text = () => {
-  const payload = { phase: app.phase };
+  const payload = {
+    phase: app.phase,
+    orientation: {
+      portrait: document.body.classList.contains('orientation-portrait'),
+      autoRotate: document.body.classList.contains('auto-rotate'),
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+  };
   if (app.state) {
     payload.level = app.state.level.id;
     payload.time = +app.state.time.toFixed(3);
@@ -354,6 +479,9 @@ window.render_game_to_text = () => {
     payload.turnstiles = app.state.turnstiles.map(t => ({ cx: t.cx, cy: t.cy, orient: t.orientation, rotating: t.rotating }));
     payload.saws = (app.state.saws || []).map(s => ({ x: Math.round(s.x), y: Math.round(s.y), axis: s.axis, range: s.range }));
     payload.crumbles = [...(app.state.crumbles || new Map()).values()].map(c => ({ c: c.c, r: c.r, touched: c.touched, broken: c.broken }));
+    payload.ghost = app.state.ghost ? { x: Math.round(app.state.ghost.x), y: Math.round(app.state.ghost.y) } : null;
+    payload.trail = app.state.runTrail?.length || 0;
+    payload.medal = medalForTime(app.state.level, app.state.time);
     payload.won = app.state.won;
     payload.paused = app.state.paused;
   }
@@ -367,6 +495,7 @@ window.advanceTime = (ms) => {
     if (app.phase === PHASE.PLAYING && app.state) {
       const input = readInput();
       update(app.state, input, TICK);
+      updateSpeedrunState(app.state, TICK);
       if (app.state.won && app.phase === PHASE.PLAYING) onLevelWon();
     }
     for (const k in justPressed) delete justPressed[k];
@@ -376,6 +505,11 @@ window.advanceTime = (ms) => {
 
 // Test helpers
 window.testStartLevel = (i) => { startLevel(i); };
+window.testForceWin = () => {
+  if (!app.state || app.phase !== PHASE.PLAYING) return;
+  app.state.won = true;
+  onLevelWon();
+};
 window.testPressKey = (code) => { justPressed[code] = true; keys[code] = true; };
 window.testReleaseKey = (code) => { keys[code] = false; };
 window.testHoldKey = (code, ms) => {

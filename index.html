@@ -20,6 +20,7 @@
           <div class="hud-left">
             <div class="hud-chip" id="hud-level">LVL 1</div>
             <div class="hud-chip" id="hud-timer"><span class="dot"></span><span id="timer-val">0:00.00</span></div>
+            <div class="hud-chip medal-chip" id="hud-medal">GOLD <span id="medal-target">0:00.00</span></div>
             <div class="hud-chip" id="hud-deaths">DEATHS <span id="deaths-val">0</span></div>
             <div class="hud-chip" id="hud-char">CHEF <span id="char-val">O</span></div>
           </div>
@@ -62,7 +63,7 @@
               </svg>
               <h1 class="title">Super Sloppy<br/><span class="title-sub">Spaghetti Yo</span></h1>
             </div>
-            <p class="tag">A saucy precision platformer · Saws · Launch pads · Crumble platforms · Instant retries</p>
+            <p class="tag">A saucy precision platformer · Saws · Launch pads · Crumble platforms · Medals · Ghost runs</p>
             <div class="cta-row">
               <button class="btn-primary" id="btn-start">START</button>
               <button class="btn-ghost" id="btn-howto">HOW TO PLAY</button>
@@ -79,12 +80,13 @@
               <li><kbd>P</kbd> <kbd>Esc</kbd> — Pause</li>
               <li><kbd>M</kbd> — Mute sauce synth</li>
             </ul>
-            <p class="hint">Keep moving. Dodge saws, bounce off sauce pads, cross crumble platforms before they break, and use fast retries to clean up the route.</p>
+            <p class="hint">Keep moving. Dodge saws, bounce off sauce pads, cross crumble platforms before they break, and chase medal times plus your best-run ghost.</p>
             <button class="btn-primary" id="btn-howto-back">GOT IT</button>
           </div>
 
           <div class="ov-card hidden" id="ov-levels">
             <h2>Level Select</h2>
+            <p class="summary-line" id="run-summary">No full clear yet.</p>
             <div class="level-grid" id="level-grid"></div>
             <button class="btn-ghost" id="btn-levels-back">BACK</button>
           </div>
@@ -104,6 +106,8 @@
               <span>Time <b id="win-time">0:00</b></span>
               <span>Deaths <b id="win-deaths">0</b></span>
             </p>
+            <p class="win-medal" id="win-medal">Medal pending</p>
+            <p class="win-detail" id="win-detail">Best run saved for ghost replay.</p>
             <div class="cta-row">
               <button class="btn-primary" id="btn-next">NEXT</button>
               <button class="btn-ghost" id="btn-replay">REPLAY</button>
