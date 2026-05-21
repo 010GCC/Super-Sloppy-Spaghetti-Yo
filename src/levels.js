@@ -58,7 +58,7 @@ export const LEVELS = [
   {
     id: 2,
     name: 'Pit & Pasta',
-    desc: 'Push the block into the pit to bridge it.',
+    desc: 'Push blocks into the pits to bridge them.',
     cols: 32,
     rows: 18,
     grid: [
@@ -73,7 +73,7 @@ export const LEVELS = [
       '................................',
       '................................',
       '..............................==',
-      '..S....B........oo........=====G',
+      '..S...B.B.......oo........=====G',
       '======================....==....',
       '......................=...==....',
       '......................=...==....',
@@ -90,7 +90,7 @@ export const LEVELS = [
   {
     id: 3,
     name: 'Spin Cycle',
-    desc: 'Push the turnstile bar to swing it 90°.',
+    desc: 'Push the turnstile bars to swing them 90°.',
     cols: 32,
     rows: 18,
     grid: [
@@ -102,22 +102,23 @@ export const LEVELS = [
       '................................',
       '................................',
       '................................',
-      '............=========...........',
-      '............=.......=...........',
-      '............=.......=...........',
-      '...S........=.......=.........G.',
-      '====........=.......=.........==',
-      '...=........=========..........=',
-      '...=...........................=',
-      '...=...........................=',
-      '...=============================',
+      '................................',
+      '................................',
+      '................................',
+      '..S............................G',
+      '================================',
+      '................................',
+      '................................',
+      '................................',
+      '................................',
       '################################',
     ],
     chars: ['o'],
     turnstiles: [
-      // Two turnstiles: blocking the bottom paths inside corridor
-      { col: 8, row: 14, orientation: 'h' },   // horizontal bar — blocks horizontal movement at y=14, sits across cols 7..9
-      { col: 23, row: 14, orientation: 'v' },  // vertical bar — blocks at col 23 around rows 13..15; push it horizontally to flip to horizontal
+      // Two turnstiles standing on the floor. Player must rotate them to pass.
+      // Vertical bars block horizontal travel; horizontal bars allow passing under them.
+      { col: 10, row: 10, orientation: 'v' },
+      { col: 22, row: 10, orientation: 'v' },
     ],
   },
 
@@ -126,7 +127,7 @@ export const LEVELS = [
   {
     id: 4,
     name: 'Sauce-Slick Shaft',
-    desc: 'Wall-jump up the shaft. Don\'t touch the sauce.',
+    desc: 'Wall-jump up the shaft. Mind the spikes.',
     cols: 32,
     rows: 18,
     grid: [
@@ -145,7 +146,7 @@ export const LEVELS = [
       '#=..==========================.#',
       '#=..............................',
       '#==========================..==#',
-      '#=...........................==#',
+      '#=...........^^^^^^^^........==#',
       '#=...S.......................==#',
       '################################',
     ],

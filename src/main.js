@@ -189,16 +189,6 @@ document.getElementById('btn-menu').addEventListener('click', () => { playSfx('c
 window.addEventListener('pointerdown', unlockAudio, { once: true });
 window.addEventListener('keydown', unlockAudio, { once: true });
 
-// ─── Fullscreen ──────────────────────────────────────────────────────────
-function toggleFullscreen() {
-  const frame = document.getElementById('frame');
-  if (!document.fullscreenElement) {
-    frame.requestFullscreen?.().catch(() => {});
-  } else {
-    document.exitFullscreen?.().catch(() => {});
-  }
-}
-
 // ─── Main loop ───────────────────────────────────────────────────────────
 const TICK = 1 / 60;
 let acc = 0;
@@ -269,8 +259,6 @@ function handleShortcuts() {
     if (app.phase === PHASE.PLAYING) pauseGame();
     else if (app.phase === PHASE.PAUSED) resumeGame();
   }
-  // F — fullscreen
-  if (justPressed['KeyF']) toggleFullscreen();
   // M — mute
   if (justPressed['KeyM']) setMuted(!isMuted());
 }
