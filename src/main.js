@@ -1,7 +1,7 @@
 // Super Sloppy Spaghetti Yo — application shell
 import { LEVELS } from './levels.js';
 import { createState, update, resetLevel, switchActor, W, H } from './game.js';
-import { render } from './render.js';
+import { render } from './render.js?v=portrait-mobile';
 import { unlockAudio, playSfx, setMuted, isMuted } from './audio.js';
 
 // ─── Canvas & context ────────────────────────────────────────────────────
@@ -232,16 +232,14 @@ document.getElementById('btn-menu').addEventListener('click', () => { playSfx('c
 window.addEventListener('pointerdown', unlockAudio, { once: true });
 window.addEventListener('keydown', unlockAudio, { once: true });
 
-// ─── Orientation / auto-rotate fit ───────────────────────────────────────
-// The preview iframe blocks orientation-lock/fullscreen APIs, so we do this
-// with responsive classes: landscape fills normally, portrait phones get a
-// rotated 16:9 frame that preserves the game canvas instead of stretching it.
+// ─── Orientation fit ─────────────────────────────────────────────────────
+// Mobile-only spec: the game is always portrait. We do not rotate the canvas;
+// landscape screens simply keep the same portrait playfield centered.
 function updateOrientationClass() {
   const portrait = window.innerHeight > window.innerWidth;
-  const coarse = matchMedia('(hover: none) and (pointer: coarse)').matches;
   document.body.classList.toggle('orientation-portrait', portrait);
   document.body.classList.toggle('orientation-landscape', !portrait);
-  document.body.classList.toggle('auto-rotate', portrait && coarse);
+  document.body.classList.toggle('mobile-portrait-spec', true);
 }
 window.addEventListener('resize', updateOrientationClass);
 window.addEventListener('orientationchange', updateOrientationClass);
@@ -459,7 +457,7 @@ window.render_game_to_text = () => {
     phase: app.phase,
     orientation: {
       portrait: document.body.classList.contains('orientation-portrait'),
-      autoRotate: document.body.classList.contains('auto-rotate'),
+      mobilePortraitSpec: document.body.classList.contains('mobile-portrait-spec'),
       width: window.innerWidth,
       height: window.innerHeight,
     },

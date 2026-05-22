@@ -638,19 +638,26 @@ export function render(ctx, state, t) {
     const alpha = state.time < 2 ? 1 : 1 - (state.time - 2) / 0.4;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = 'rgba(20, 14, 10, 0.7)';
     const tx = W / 2;
-    const ty = H / 2 - 40;
-    ctx.font = '700 11px "JetBrains Mono", monospace';
+    const ty = 92;
+    const bw = Math.min(W - 34, 360);
+    const bh = 54;
+    ctx.fillStyle = 'rgba(20, 14, 10, 0.62)';
+    ctx.strokeStyle = 'rgba(245, 160, 86, 0.22)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, tx - bw / 2, ty - 28, bw, bh, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.font = '700 10px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#f5a056';
-    ctx.fillText(`LEVEL ${state.level.id}`, tx, ty - 18);
-    ctx.font = '700 32px "Clash Display", "Satoshi", sans-serif';
+    ctx.fillText(`LEVEL ${state.level.id}`, tx, ty - 10);
+    ctx.font = '700 22px "Satoshi", sans-serif';
     ctx.fillStyle = '#f6e7c1';
     ctx.fillText(state.level.name, tx, ty + 14);
-    ctx.font = '500 13px "Satoshi", sans-serif';
+    ctx.font = '500 11px "Satoshi", sans-serif';
     ctx.fillStyle = '#b39c75';
-    ctx.fillText(state.level.desc, tx, ty + 38);
+    ctx.fillText(state.level.desc, tx, ty + 32);
     ctx.restore();
   }
 }

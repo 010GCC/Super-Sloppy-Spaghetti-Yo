@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>Super Sloppy Spaghetti Yo</title>
-    <meta name="description" content="A saucy precision platformer where a Spaghetti-O sprints, jumps, wall-slides, dodges saws, rides launch pads, and instantly respawns through tomato-can hazard gauntlets." />
+    <meta name="description" content="A mobile-only vertical precision platformer where a Spaghetti-O sprints, jumps, wall-slides, dodges saws, rides launch pads, and instantly respawns through tomato-can hazard gauntlets." />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://api.fontshare.com" />
     <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@500,700,900&f[]=jetbrains-mono@500&display=swap" rel="stylesheet" />
@@ -13,7 +13,7 @@
   <body>
     <div id="app">
       <div id="frame">
-        <canvas id="game" width="960" height="540" aria-label="Super Sloppy Spaghetti Yo game canvas"></canvas>
+        <canvas id="game" width="540" height="960" aria-label="Super Sloppy Spaghetti Yo mobile portrait game canvas"></canvas>
 
         <!-- HUD -->
         <div id="hud" aria-hidden="false">
@@ -28,18 +28,6 @@
             <button id="btn-pause" class="hud-btn" aria-label="Pause">⏸</button>
             <button id="btn-reset" class="hud-btn" aria-label="Reset">↻</button>
             <button id="btn-menu" class="hud-btn" aria-label="Level Select">≡</button>
-          </div>
-        </div>
-
-        <!-- Touch controls -->
-        <div id="touch" aria-hidden="true">
-          <div class="touch-pad">
-            <button class="tbtn" data-key="ArrowLeft" aria-label="Left">◀</button>
-            <button class="tbtn" data-key="ArrowRight" aria-label="Right">▶</button>
-          </div>
-          <div class="touch-actions">
-            <button class="tbtn act-switch" data-key="KeyE" aria-label="Switch character">SWAP</button>
-            <button class="tbtn act-jump" data-key="Space" aria-label="Jump">JUMP</button>
           </div>
         </div>
 
@@ -63,24 +51,24 @@
               </svg>
               <h1 class="title">Super Sloppy<br/><span class="title-sub">Spaghetti Yo</span></h1>
             </div>
-            <p class="tag">A saucy precision platformer · Saws · Launch pads · Crumble platforms · Medals · Ghost runs</p>
+            <p class="tag">Mobile-only vertical precision platforming · Saws · Launch pads · Medals · Ghost runs</p>
             <div class="cta-row">
               <button class="btn-primary" id="btn-start">START</button>
               <button class="btn-ghost" id="btn-howto">HOW TO PLAY</button>
             </div>
-            <p class="footnote">Original art. Generic mechanics only. Best with keyboard.</p>
+            <p class="footnote">Original art. Built for portrait phone play.</p>
           </div>
 
           <div class="ov-card hidden" id="ov-howto">
             <h2>How to Play</h2>
             <ul class="controls">
-              <li><kbd>←</kbd> <kbd>→</kbd> <span class="alt">or</span> <kbd>A</kbd> <kbd>D</kbd> — Move</li>
-              <li><kbd>Space</kbd> <kbd>W</kbd> <kbd>↑</kbd> — Jump (slide on walls then jump to wall-jump)</li>
+              <li><kbd>◀</kbd> <kbd>▶</kbd> — Move with the bottom-left controls</li>
+              <li><kbd>JUMP</kbd> — Jump, wall-slide, and wall-jump with the bottom-right control</li>
               <li><kbd>R</kbd> — Reset level</li>
               <li><kbd>P</kbd> <kbd>Esc</kbd> — Pause</li>
               <li><kbd>M</kbd> — Mute sauce synth</li>
             </ul>
-            <p class="hint">Keep moving. Dodge saws, bounce off sauce pads, cross crumble platforms before they break, and chase medal times plus your best-run ghost.</p>
+            <p class="hint">The controls live below the game area so they never cover platforms, hazards, or the player.</p>
             <button class="btn-primary" id="btn-howto-back">GOT IT</button>
           </div>
 
@@ -118,8 +106,20 @@
 
         <div id="debug" aria-hidden="true"></div>
       </div>
+
+      <!-- Touch controls are outside the playfield so they never cover gameplay. -->
+      <div id="touch" aria-hidden="true">
+        <div class="touch-pad">
+          <button class="tbtn" data-key="ArrowLeft" aria-label="Left">◀</button>
+          <button class="tbtn" data-key="ArrowRight" aria-label="Right">▶</button>
+        </div>
+        <div class="touch-actions">
+          <button class="tbtn act-switch" data-key="KeyE" aria-label="Switch character">SWAP</button>
+          <button class="tbtn act-jump" data-key="Space" aria-label="Jump">JUMP</button>
+        </div>
+      </div>
     </div>
 
-    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/main.js?v=portrait-mobile"></script>
   </body>
 </html>

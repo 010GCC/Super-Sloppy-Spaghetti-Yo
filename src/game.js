@@ -4,10 +4,10 @@
 import { LEVELS } from './levels.js';
 
 export const TILE = 30;
-export const COLS = 32;
-export const ROWS = 18;
-export const W = COLS * TILE; // 960
-export const H = ROWS * TILE; // 540
+export const COLS = 18;
+export const ROWS = 32;
+export const W = COLS * TILE; // 540
+export const H = ROWS * TILE; // 960
 
 // Tile types (numeric for fast lookup)
 export const T = {

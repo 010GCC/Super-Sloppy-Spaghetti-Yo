@@ -1,6 +1,6 @@
 # Super Sloppy Spaghetti Yo
 
-A browser-based precision platformer starring a sentient Spaghetti-O in a saucy tomato-can factory. The current direction drops the Kwirk-style puzzle focus and leans into speed, wall-slides, wall-jumps, moving saws, launch pads, crumble platforms, spike reads, instant respawns, medal targets, best-run ghosts, and short levels built for clean reruns.
+A mobile-only vertical precision platformer starring a sentient Spaghetti-O in a saucy tomato-can factory. The current direction drops the Kwirk-style puzzle focus and leans into portrait phone play, speed, wall-slides, wall-jumps, moving saws, launch pads, crumble platforms, spike reads, instant respawns, medal targets, best-run ghosts, and short levels built for clean one-handed reruns.
 
 All art, sound, code, level design and brand identity are original to this project.
 
@@ -36,14 +36,14 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 
 | Path | Purpose |
 |---|---|
-| `index.html` | Title screen, HUD, pause/reset/menu buttons, mobile touch controls, overlay panels |
-| `style.css` | Pasta-noir design tokens, responsive layout, touch control styling |
+| `index.html` | Title screen, portrait HUD, pause/reset/menu buttons, bottom-docked mobile touch controls, overlay panels |
+| `style.css` | Pasta-noir design tokens, mobile-only portrait layout, non-obstructive control dock styling |
 | `favicon.svg` | Custom Spaghetti-O ring mark |
-| `src/levels.js` | 5 hand-authored precision-platforming levels in ASCII tile grids plus declared saw paths |
+| `src/levels.js` | 5 hand-authored 18×32 portrait precision-platforming levels plus declared saw paths |
 | `src/game.js` | Core engine — tile collision, moving saws, crumble platforms, launch pads, AABB sub-stepping, wall-slide, wall-jump, coyote time, jump buffering |
 | `src/render.js` | Procedural canvas rendering of tiles, spikes, saws, launch pads, crumble platforms, best-run ghosts, goal, actors, and dormant puzzle-object visuals |
 | `src/audio.js` | Procedural Web Audio sound effects |
-| `src/main.js` | Phase machine, input handling, fixed-timestep loop, HUD wiring, speedrun session state, responsive orientation classes, Playwright test hooks |
+| `src/main.js` | Phase machine, input handling, fixed-timestep loop, HUD wiring, speedrun session state, portrait orientation classes, Playwright test hooks |
 
 ## Gameplay features
 
@@ -61,12 +61,12 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - Launch pads bounce the player upward for fast routes and vertical exits.
 - Static spikes and pits still provide readable one-touch hazards.
 
-**5 platforming-first levels**
-1. **Launch Lunch** — introduces sauce launch pads.
-2. **Buzzsaw Bucatini** — introduces moving saw timing.
-3. **Cracker Collapse** — introduces crumble platforms.
-4. **Wall Sauce Deluxe** — wall-jump shaft with moving saw pressure.
-5. **The Final Slopline** — mixed final gauntlet with pads, crumble, saws, spikes, and flow.
+**5 mobile portrait levels**
+1. **Pocket Launch** — introduces upward portrait routing and sauce launch pads.
+2. **Thumb Saw Rise** — introduces moving saw timing with short thumb-friendly jumps.
+3. **Crumb Climber** — introduces crumble platforms in a vertical ascent.
+4. **Sauce Shaft** — wall-jump shaft with moving saw pressure.
+5. **One-Hand Slopline** — mixed final portrait gauntlet with pads, crumble, saws, spikes, and flow.
 
 **UI**
 - Animated title screen with logo, How To Play, and Level Select.
@@ -74,7 +74,7 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - HUD chips for current level, timer, death count, and active medal pace.
 - Pause overlay with resume / reset / quit.
 - Win overlay with final time, deaths, medal result, best ghost status, retry / next / menu.
-- Touch controls on mobile-sized viewports.
+- Touch controls are permanently docked below the playfield so they never cover platforms, hazards, the player, the goal, or ghost runs.
 
 **Speedrun layer**
 - Each level has gold, silver, and bronze target times.
@@ -83,16 +83,16 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 - Clearing every level shows a full-clear total time on the win screen.
 - Speedrun data is in-memory only and resets when the page reloads.
 
-**Auto-rotate / responsive play**
-- The game listens for `resize` and `orientationchange` events and updates orientation classes immediately.
-- Landscape mobile fills the available viewport while preserving the 16:9 canvas.
-- Portrait touch devices use a CSS auto-rotate frame so the game remains landscape-shaped instead of stretching vertically.
+**Mobile-only vertical play**
+- The game canvas is 540×960 with an 18×32 tile world and a 9:16 portrait aspect ratio.
+- The frame remains portrait in all viewport orientations; it is never rotated into landscape.
+- Bottom touch controls live outside the canvas in a reserved dock, so gameplay space is never obstructed.
 - Browser orientation-lock and fullscreen APIs are intentionally not used because the hosted preview iframe blocks them.
 
 ## Controls
 
-- Move: Arrow Left/Right or A/D
-- Jump: Space, W, or Up Arrow
+- Move: bottom-left touch buttons, Arrow Left/Right, or A/D
+- Jump: bottom-right JUMP button, Space, W, or Up Arrow
 - Reset: R
 - Pause: P or Esc
 - Mute: M
@@ -109,5 +109,5 @@ The entry point is `index.html` at the project root. All assets (`style.css`, `f
 
 - **No persistent saves.** Best times, medals, ghosts, and progress reset on page reload because the sandboxed iframe blocks browser storage.
 - **Fonts require network.** Fontshare fonts load from the CDN; offline users fall back to system sans-serif.
-- **Physical mobile device QA not performed.** Touch controls and responsive auto-rotate behavior are implemented and tested through browser viewport emulation, but should still be checked on real phones.
+- **Physical mobile device QA not performed.** Touch controls and portrait layout are implemented and tested through browser viewport emulation, but should still be checked on real phones.
 - **No online leaderboards yet.** Medal targets and best-run ghosts are implemented; global scores would need a backend.
